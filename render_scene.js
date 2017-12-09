@@ -9,7 +9,7 @@ var arenaLength = 300;
 var obstacleX = [200, 40, -120, 8, 60];
 var obstacleZ = [40, 200, 314, -10, -90];
 
-var dayTime = false;
+var dayTime = true;
 
 
 var damage1 = 1;
