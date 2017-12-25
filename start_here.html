@@ -9,17 +9,16 @@
             attribute vec4 vNormal;
             attribute vec4 vColor;
 
-            
 
 
-            uniform vec4 uLight_position[16]; // assumed to be in eye coordinates. 
+            uniform vec4 uLight_position; // assumed to be in eye coordinates. 
             uniform mat4 uProjection;
             uniform mat4 uModel_view;
 
             // output values that will be interpreted per-fragment
             varying  vec3 fN;
             varying  vec3 fE;
-            varying  vec3 fL[16];
+            varying  vec3 fL;
             varying vec4 color;
             //varying vec4 uColor;
 
@@ -33,10 +32,7 @@
                 texCoord = vTexCoords;
                 fN = normalize( uModel_view*vNormal ).xyz;
                 fE = -(uModel_view*vPosition).xyz;
-                for (int i = 0; i < 16; i++){
-                	//if (i >= uNumLights) break; 
-                	fL[i] = uLight_position[i].xyz - (uModel_view * vPosition).xyz;
-            	}
+                fL = uLight_position.xyz - (uModel_view * vPosition).xyz;
 
                 gl_Position = uProjection * uModel_view * vPosition;
             }
@@ -48,13 +44,12 @@
 
             // per-fragment interpolated values from the vertex shader
             varying vec3 fN;
-            varying vec3 fL[16];
+            varying vec3 fL;
             varying vec3 fE;
 
             // incoming uniform values
-            uniform int uNumLights; //variable for the number of lights
             uniform vec4  uColor;
-            uniform vec4  uLight_position[16];
+            uniform vec4  uLight_position;
             uniform vec4  uAmbient_product, uDiffuse_product, uSpecular_product;
             uniform float uShininess;
 
@@ -77,7 +72,6 @@
 
             void main()
             {
-                
                 //int umode = 3;
                 vec4 myColor;
                 if (uMode == 0){
@@ -93,29 +87,26 @@
                 // Normalize the input lighting vectors
                 vec3 N = normalize(fN);
                 vec3 E = normalize(fE);
+                vec3 L = normalize(fL);
+
+                vec3 H = normalize( L + E );
+
                 vec4 ambient = uAmbient_product*myColor;
 
-                vec4 accumulate = vec4(0.0, 0.0, 0.0, 1.0);
-                for (int i = 0; i < 16; i++){
-                	if (i >= uNumLights){break;}
-                	vec3 L = normalize(fL[i]);
-                	vec3 H = normalize(L + E);
+                float diffDot = max(dot(L, N), 0.0);
+                vec4 diffuse = diffDot*uDiffuse_product*myColor;
 
-                	float diffDot = max(dot(L, N), 0.0);
-                	vec4 diffuse = diffDot*uDiffuse_product*myColor;
-                	float specDot = pow(max(dot(N, H), 0.0), uShininess);
-                	vec4 specular = specDot*uSpecular_product*myColor;
-                	if( dot(L, N) < 0.0 ) {
-                   		specular = vec4(0.0, 0.0, 0.0, 1.0);
-                	}
-                	accumulate += specular;
-                	accumulate += diffuse;
-            	}
-                 
+                float specDot = pow(max(dot(N, H), 0.0), uShininess);
+                vec4 specular = specDot*uSpecular_product*myColor;
+
+                // discard the specular highlight if the light's behind the vertex
+                if( dot(L, N) < 0.0 ) {
+                   specular = vec4(0.0, 0.0, 0.0, 1.0);
+                }
+
+                gl_FragColor  = ambient + diffuse + specular;
                 if (uMode == 4){
                     gl_FragColor = myColor; //override because we want the light to be colored yellow
-                }else{
-                	gl_FragColor  = ambient + accumulate;
                 }
                 gl_FragColor.a = 1.0;
             }
@@ -127,12 +118,14 @@
         <script type="text/javascript" src="eventHandlers.js"></script> 
         <script type="text/javascript" src="Common/MV.js"></script>
         <script type="text/javascript" src="Common/MatrixStack.js"></script>
+        <script type="text/javascript" src="Common/lives.js"></script>
         <script type="text/javascript" src="Lighting.js"></script>
         
         <script type="text/javascript" src="textures/Checkerboard.js"></script>
         <script type="text/javascript" src="textures/Stripes.js"></script>
         <script type="text/javascript" src="textures/Pokadot.js"></script>
         <script type="text/javascript" src="textures/ImageTexture.js"></script>
+
 
 
         <script type="text/javascript" src="geometry/Cylinder.js"></script>
@@ -145,12 +138,13 @@
         <script type="text/javascript" src="geometry/Cube.js"></script>
         <script type="text/javascript" src="geometry/CubeMove.js"></script>
         <script type="text/javascript" src="geometry/wheels.js"></script>
+        <script type="text/javascript" src="geometry/Cube2.js"></script>
         <script type="text/javascript" src="geometry/tank.js"></script>
-        <script type = "text/javascript" src = "geometry/Sun.js"></script>
+        <!-- <script type = "text/javascript" src = "geometry/Sun.js"></script> -->
         <script type ="text/javascript" src="Robot.js"></script>
         <script type="text/javascript" src="geometry/Axis.js"></script>
         <script type="text/javascript" src="geometry/Shapes.js"></script>
-        <script type="text/javascript" src="gemoetry/Cube2.js"></script>
+        
         <script type="text/javascript" src="Camera.js"></script>
         <script type="text/javascript" src="render_scene.js"></script>
 

@@ -6,7 +6,15 @@ var health2 = 1000;
 var lives1 = startingLife;
 var lives2 = startingLife;
 
+//the damages of the tanks. These will update when the lightning power up is obtained.
+var damage1 = 1;
+var damage2 = 1;
+
+
+
 function drawTank(theta, health,tankNum){
+
+    
     
     //drawing the health bar
     stack.push();

@@ -9,7 +9,7 @@ var alpha = .5;
 var maxScale = 3;
 
 function Camera() {
-    this.box = false;
+    this.box = false;   //does the camera have a protective box around it
     this.id = ""
     this.theta1 = 0;
     this.theta2 = 0;

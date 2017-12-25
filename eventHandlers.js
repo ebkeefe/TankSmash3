@@ -211,8 +211,9 @@ function moveCamera(flags){
         //dirty = true;
     //}
     if (dirty) {
-        checkCollision();
+        checkTankCollision();
         checkObstacleCollision();
+        checkLeaveBoundary();
         checkEndGame();
         render (); 
     }
@@ -274,7 +275,17 @@ function checkPowerUp(){
     }
 }
 
+//this function returns the distance between the centers of the tanks
+function calcDist(){
+    var xDistance = camera1.eye[0] - camera2.eye[0];
+    var zDistance = camera1.eye[2] - camera2.eye[2]; 
+    var distance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(zDistance, 2)); 
+    return distance;
+}
+
 function checkObstacleCollision(){
+    
+    //returns the distance between tank 1 and a given obstacle
     var calcDistOne = function (index) { 
         var xDistance = camera1.eye[0] + obstacleX[index];
         var zDistance = camera1.eye[2] + obstacleZ[index]; 
@@ -282,21 +293,15 @@ function checkObstacleCollision(){
         return distance;
     };
 
-     var calcDistTwo = function (index) { 
+    //returns the distance between tank 2 and a given obstacle
+    var calcDistTwo = function (index) { 
         var xDistance = camera2.eye[0] + obstacleX[index];
         var zDistance = camera2.eye[2] + obstacleZ[index]; 
         var distance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(zDistance, 2)); 
         return distance;
     };
 
-    var calcDist = function () { 
-        var xDistance = camera1.eye[0] - camera2.eye[0];
-        var zDistance = camera1.eye[2] - camera2.eye[2]; 
-        var distance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(zDistance, 2)); 
-        return distance;
-    };
-
-
+   
     for (var i = 0; i < 5; i++){
         if (calcDistOne(i) < tankRad){
             camera1.scale *= -1/2;
@@ -312,15 +317,7 @@ function checkObstacleCollision(){
                 }
             }
             
-                // while(calcDist() < tankRad){
-                //     camera2.move();
-                // }
-            
-            //at this point the tanks could be touching, move camera 2 back until they're not touching
-
-            
             if (!camera1.box)health1 -= Math.abs(Math.floor(50 * camera1.scale));
-            //document.getElementById("Tank1Health").innerHTML = "Tank 1 Health: "  + health1;
             render();
         }
 
@@ -351,28 +348,17 @@ function checkObstacleCollision(){
         }
 
 
-    
-
     }
 
 }
 
-function checkCollision(){
-    
-
-    
+function checkTankCollision(){
+  
     //check tank1 colliding with tank 2
-    //calculate distance
-    var calcDist = function () { 
-        var xDistance = camera1.eye[0] - camera2.eye[0];
-        var zDistance = camera1.eye[2] - camera2.eye[2]; 
-        var distance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(zDistance, 2)); 
-        return distance;
-    };
-
     
-
     if (calcDist() < tankRad){
+
+
         
         var hit1Speed = Math.abs(camera1.scale);
         var hit2Speed = Math.abs(camera2.scale);
@@ -453,14 +439,16 @@ function checkCollision(){
             health2 -= Math.floor(50 * hit1Speed)*damage1;
         }else{
             //we have a blind side hit from tank 2
-            health1 -= Math.floor(50 * hit2Speed)*damage1;
+            health1 -= Math.floor(50 * hit2Speed)*damage2;
         }
         //document.getElementById("Tank1Health").innerHTML = "Tank 1 Health: "  + health1;
         //document.getElementById("Tank2Health").innerHTML = "Tank 2 Health: "  + health2;
         render();
         
     }
+}
 
+function checkLeaveBoundary(){
     //check for tank1 leaving the boundary of the game
      var calcOutsideOne = function(){
         var outside = camera1.eye[0] + tankRad >= arenaLength || camera1.eye[0] - tankRad <= -arenaLength || camera1.eye[2] + tankRad >= arenaLength ||
@@ -496,6 +484,7 @@ function checkCollision(){
         //document.getElementById("Tank1Health").innerHTML = "Tank 1 Health: "  + health1;
         render();
     }
+    
     var calcOutsideTwo = function(){
         var outside = camera2.eye[0] + tankRad >= arenaLength || camera2.eye[0] - tankRad <= -arenaLength || camera2.eye[2] + tankRad >= arenaLength ||
         camera2.eye[2] - tankRad <= -arenaLength
@@ -534,13 +523,9 @@ function checkCollision(){
         //document.getElementById("Tank2Health").innerHTML = "Tank 2 Health: "  + health2;
         render();
     }
-
     
-    
-
-    
-
 }
+
 
 function checkEndGame(){
        // console.log("I'm here");
@@ -584,8 +569,8 @@ function endGame(winner){
     document.getElementById("restartGame").innerHTML = "Tank " + winner + " wins the game!!! Right click to restart";
     paused = true;
     console.log("just updated paused " + paused);
-    damage1 = false;
-    damage2 = false;
+    damage1 = 1;
+    damage2 = 1;
     camera1.box = false;
     camera2.box = false;
 

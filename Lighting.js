@@ -11,20 +11,13 @@ var uDiffuse_product;
 var uSpecular_product;
 var uLight_position;
 var uShininess;
-//var numLights;
 
-
-function Lighting(x, y, z, a, d, s) { //0.6, 1.0, 0.8
+function Lighting(x, y, z) {
     // Important:  These light coordinates are in World Coordinates. 
     //             Before sending them to the vertex shader, we need 
     //             to convert to eye coordinates. This is done in the render method. 
     //0, 60, 0
-    this.numLights = x.length; 
-
-    this.light_position = [];
-    for (var i =0; i < this.numLights; i++){
-        this.light_position.push(vec4(x[i], y[i], z[i], 1));
-    }
+    this.light_position = vec4(x, y, z, 1);
 
     // Light colors all set to white at the moment
     this.ambientColor = vec4(1.0,1.0,1.0,1.0);
@@ -35,9 +28,9 @@ function Lighting(x, y, z, a, d, s) { //0.6, 1.0, 0.8
 
     // These are really material properties and belong with each individual object but
     // for now we will lump them in here and they will apply to all objects.
-    this.ka = a;
-    this.kd = d;
-    this.ks = s;
+    this.ka = 0.5;
+    this.kd = 1.0;
+    this.ks = 0.8;
     this.shininess = 50.0;
 }
 
@@ -55,15 +48,12 @@ Lighting.prototype.setUp = function () {
     uSpecular_product = gl.getUniformLocation(program, "uSpecular_product")
     gl.uniform4fv(uSpecular_product, specular_product);
 
-    uLight_position = new Array(this.numLights);
-    for (var i = 0; i < this.numLights; i++){
-        uLight_position[i] = gl.getUniformLocation(program, "uLight_position["+i+"]")
-        gl.uniform4fv(uLight_position[i], this.light_position[i]);
-    }
-    
+    uLight_position = gl.getUniformLocation(program, "uLight_position")
+    gl.uniform4fv(uLight_position, this.light_position);
+
     uShininess = gl.getUniformLocation(program, "uShininess");
     gl.uniform1f(uShininess, this.shininess);
-}
+};
 
 // Lighting.prototype.keyAction = function (key) {
 //     var alpha = 2.0;  // used to control the amount of a turn during the flythrough 

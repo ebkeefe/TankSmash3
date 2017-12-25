@@ -11,7 +11,7 @@ var Shapes = {};   // set up Shapes namespace
 //Shapes.sphere = new Sphere(); //global
 //Shapes.sun = new Sun(60);
 Shapes.cube = new Cube();  // global
-//Shapes.cube2 = new Cube2();
+Shapes.cube2 = new Cube2();
 Shapes.cubeMove1 = new CubeMove(0);
 Shapes.hollowCylinder1 = new HollowCylinder(50,0);
 Shapes.cubeMove2 = new CubeMove(0);
@@ -27,7 +27,7 @@ Shapes.axis = new Axis();
 Shapes.initShapes = function () {
     //Shapes.initBuffers(Shapes.sun);
     //Shapes.initBuffers(Shapes.sphere);
-    //Shapes.initBuffers(Shapes.cube2);
+    Shapes.initBuffers(Shapes.cube2);
     Shapes.initBuffers(Shapes.cube);
     Shapes.initBuffers(Shapes.cubeMove1);
     Shapes.initBuffers(Shapes.hollowCylinder1);
@@ -37,7 +37,7 @@ Shapes.initShapes = function () {
     Shapes.initBuffers(Shapes.hexathing);
     Shapes.initBuffers(Shapes.cone);
     Shapes.initBuffers(Shapes.disc);
-    Shapes.initBuffers(Shapes.sun);
+    //Shapes.initBuffers(Shapes.sun);
     Shapes.axis.initBuffer();
 
 };

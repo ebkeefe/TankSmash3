@@ -9,12 +9,6 @@ var arenaLength = 300;
 var obstacleX = [200, 40, -120, 8, 60];
 var obstacleZ = [40, 200, 314, -10, -90];
 
-var dayTime = true;
-
-
-var damage1 = 1;
-var damage2 = 1;
-
 var canvas;       // HTML 5 canvas
 var gl;           // webgl graphics context
 var vPosition;    // shader variable attrib location for vertices 
@@ -32,7 +26,9 @@ var uMode; //uniform variable for color mode
 
 var pUpCoords = [arenaLength/2,1,arenaLength/2];
 var pUpOn = true;
-var pUpType = Math.floor(3*Math.random());
+var pUpType = 2; //Math.floor(3*Math.random());
+//var pUpType = 2;
+
 var pUpTime = Date.now();
 
 var tankTexture;
@@ -59,36 +55,7 @@ camera2.reset();
 
 var stack = new MatrixStack();
 
-//dayTime lighting variables
-var sunX = new Array(0);
-sunX[0] = 0;
-
-var sunY = new Array(0);
-sunY[0] = 0;
-
-var sunZ = new Array(0);
-sunZ[0] = 0;
-
-var dayLighting = new Lighting(sunX, sunY, sunZ, 0.5, 1.0, 0.8);
-
-
-//nightTime lighting variables
-
-var headLightX = new Array(1);
-headLightX[0] = camera1.eye[0];
-headLightX[1] = camera2.eye[0];
-
-var headLightY = new Array(0);
-headLightY[0] = 10;
-headLightY[1] = 10;
-
-var headLightZ = new Array(0);
-headLightZ[0] = camera1.eye[2];
-headLightZ[1] = camera2.eye[2];
-
-var nightLighting = new Lighting(headLightX, headLightY, headLightZ, 0.0, 1.0, 0.8);
-
-
+var dayLighting = new Lighting(0, 60, 0);
 
 var program;
 
@@ -98,7 +65,7 @@ window.onload = function init() {
     // });
     // document.getElementById("turret").addEventListener("input", function(){
     //     turrTheta = document.getElementById("turret").value;
-    // });
+    // })
     // document.getElementById("wheels").addEventListener("input", function(){
     //     wheelTheta = document.getElementById("wheels").value;
     // });
@@ -149,12 +116,8 @@ function startGame(){
     //  Load shaders
     program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
-    if (dayTime){
-        dayLighting.setUp();
-    }else{
-        nightLighting.setUp();
-    }
-
+    dayLighting.setUp();
+    
        
     
     
@@ -204,11 +167,11 @@ function render(){
     
     var viewMat = camera1.calcViewMat();   // View matrix
     gl.viewport( 0, 0, canvas.width/2.0 - sepW/2, canvas.height );
-    renderScene(viewMat);
+    renderScene(viewMat, 1);
 
     var viewMat = camera2.calcViewMat();   // View matrix
     gl.viewport( canvas.width/2 + sepW/2, 0, canvas.width/2 - sepW/2, canvas.height );
-    renderScene(viewMat);
+    renderScene(viewMat, 2);
 
     gl.viewport(canvas.width/2 - sepW/2, 0, sepW, canvas.height );
     gl.disable(gl.DEPTH_TEST);
@@ -279,7 +242,9 @@ function drawPowerUp(){
     }
 }
 
-function renderScene(viewMat)
+
+
+function renderScene(viewMat, tankNumber)
 {
     
     // if (dummy){
@@ -300,23 +265,7 @@ function renderScene(viewMat)
     camera1.move();
     camera2.move();
 
-    if (!dayTime){
-        nightLighting.light_position[0][0] = camera1.eye[0];
-        
-        nightLighting.light_position[0][2] = camera1.eye[2];
-
-        //nightLighting.light_position[0] = mult(nightLighting.light_position[0], inverse(camera1.calcViewMat()));
-
-        console.log("updating night lights positioning")
-        console.log(nightLighting.light_position[0]);
-        //nightLighting.light_position[0] = camera1.eye;
-        
-        nightLighting.light_position[1][0] = camera2.eye[0];
-        //nightLighting.light_position[1][1] = camera2.eye[1];
-        nightLighting.light_position[1][2] = camera2.eye[2];
-
-
-    }
+    
 
      //drawing the tank
     stack.clear();
@@ -337,6 +286,9 @@ function renderScene(viewMat)
     drawTank(camera1.theta1, health1,1);
     
     if(camera1.box)drawTankBox();
+
+    stack.multiply(translate(-1/2*camera1.scale,0,0));
+    if (tankNumber==1)drawLives(lives1);
     
     stack.pop();
 
@@ -353,28 +305,18 @@ function renderScene(viewMat)
     
     if(camera2.box)drawTankBox();
 
+    stack.multiply(translate(-1/2*camera2.scale,0,0));
+    if (tankNumber==2) drawLives(lives2);
+
     stack.pop();
 
     stack.pop();
 
     stack.multiply(viewMat);
     
-    if (dayTime){
-    // Setting the light position
-        for (var i = 0; i < dayLighting.light_position.length; i++){
-            var newLight = mult(viewMat, dayLighting.light_position[i]); 
-            gl.uniform4fv(uLight_position[i], newLight);
-        }
-    }else{
-        //update position into eye coordinates before sending to shader
-
-        for (var i = 0; i < nightLighting.light_position.length; i++){
-            //var newLight = mult(viewMat, nightLighting.light_position[i]); 
-            gl.uniform4fv(uLight_position[i], nightLighting.light_position[i]);
-        }
-
-    }
-
+    var newLight = mult(viewMat, dayLighting.light_position); 
+    gl.uniform4fv(uLight_position, newLight);
+        
     
     
     gl.uniformMatrix4fv(uModel_view, false, flatten(stack.top()));
@@ -503,8 +445,7 @@ function drawTankBox(){
     gl.uniform4fv(uColor, vec4(1.0, 0.0, 0.0, 1.0));
     gl.uniform1i(uMode, 2);
     gl.uniformMatrix4fv(uModel_view, false, flatten(stack.top()));
-    Shapes.drawPrimitive(Shapes.cube);
-    //Shapes.drawPrimitive(Shapes.cube2);
+    Shapes.drawPrimitive(Shapes.cube2);
     
 }
 
